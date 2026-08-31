@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CLAPI — Isotipo 3D</title>
+<meta name="theme-color" content="#06050C">
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+  }
+}
+</script>
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overscroll-behavior: none; }
+  body { background: #06050C; }
+  #stage { position: fixed; inset: 0; touch-action: none; cursor: grab; }
+  #stage:active { cursor: grabbing; }
+  #stage canvas { display: block; width: 100%; height: 100%; }
+</style>
+</head>
+
+<body>
+
+<div id="stage" role="img" aria-label="Isotipo 3D de CLAPI. Arrastra para rotarlo."></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { Reflector } from 'three/addons/objects/Reflector.js';
+
+/*
+  ── Isotipo CLAPI en 3D ─────────────────────────────────────────────────────
+
+  Tres sólidos coplanares: el cuerpo violeta en "L", la cinta amarilla superior
+  y la punta amarilla inferior.
+
+  Los contornos NO son el trazado píxel a píxel del PNG que había antes. Ese
+  trazado arrastraba dos cosas del logo plano que no son geometría:
+
+   1. Una cuarta pieza ("violetDark") que en el isotipo 2D es sólo el degradado
+      del violeta — el trazador lo leyó como un color distinto y lo separó.
+      Extruida aparecía como una lasca suelta flotando sobre el cuerpo.
+   2. Cada esquina como una escalera de 3-4 vértices de píxel, así que el bisel
+      de la extrusión se enganchaba en ellas en vez de leerse como un canto.
+
+  Estos vértices se sacaron de Isotipo.png ajustando una recta por mínimos
+  cuadrados a cada lado del contorno e intersecando lados consecutivos, así que
+  son las esquinas geométricas exactas (IoU 0.983 contra la máscara del PNG; el
+  resto es el redondeo de las puntas, que aquí lo pone roundedShape).
+
+  Coordenadas centradas en el bounding box del isotipo, altura total = 1.
+*/
+const VIOLET_BODY = [
+  [-0.1254,  0.1291],  // fin del corte diagonal superior, canto interior
+  [-0.1254, -0.2081],  // codo interior
+  [ 0.1758, -0.4084],  // punta inferior derecha, lado interior
+  [-0.0017, -0.5186],  // punta inferior derecha, lado exterior
+  [-0.4108, -0.2507],  // abajo-izquierda
+  [-0.4099,  0.3140],  // arriba-izquierda
+];
+
+const YELLOW_BAND = [
+  [ 0.4115,  0.2172],  // esquina superior derecha
+  [ 0.4115,  0.0152],  // fin del bajante derecho
+  [ 0.1943,  0.0152],  // codo interior
+  [-0.3228,  0.3475],  // fin del corte diagonal izquierdo
+  [-0.0498,  0.5215],  // punta superior izquierda
+];
+
+const YELLOW_TIP = [
+  [ 0.4115, -0.1498],
+  [ 0.4115, -0.2550],
+  [ 0.2288, -0.3717],
+  [ 0.0408, -0.2535],
+  [ 0.1978, -0.1513],
+];
+
+const COLOR_VIOLET = '#532ce1';
+const COLOR_YELLOW = '#f5f102';
+const COLOR_BG     = '#06050C';
+
+const WORLD_SCALE  = 4.6;
+const DEPTH        = 0.30;   // grosor de la extrusión, en unidades del logo
+/* El logo plano tiene las esquinas casi a escuadra (el radio que mejor ajusta
+   su máscara es ~0.005). Este redondeo es una licencia del render 3D, como en
+   la referencia: da un canto que atrapa la luz en vez de un filo duro. */
+const CORNER       = 0.035;
+
+/* El punto más bajo del isotipo es la punta inferior del violeta (y = -0.5186).
+   El suelo va justo ahí para que la pieza apoye y el reflejo arranque pegado a
+   ella: con el suelo más abajo el objeto flota y el reflejo aparece despegado,
+   al doble de la distancia. La rotación es sobre Y, así que esa cota no cambia. */
+const GROUND_Y     = -0.5186 * WORLD_SCALE;
+
+const stage = document.getElementById('stage');
+const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+} catch (err) {
+  renderer = null;
+}
+if (!renderer || !renderer.getContext()) throw new Error('WebGL no disponible');
+
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+/* Neutral (Khronos PBR Neutral) en vez de ACESFilmic: ACES desatura con fuerza
+   los colores muy saturados al acercarse a la exposición alta — el #f5f102
+   salía caqui pálido y el #532ce1 lila. Neutral conserva el tono de marca y
+   sólo comprime las altas luces. */
+renderer.toneMapping = THREE.NeutralToneMapping;
+renderer.toneMappingExposure = 1.0;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+stage.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(COLOR_BG);
+
+const camera = new THREE.PerspectiveCamera(32, window.innerWidth / window.innerHeight, 0.1, 200);
+
+/*
+  Encuadre por ajuste de frustum, no por distancia fija: una distancia fija
+  asume una relación de aspecto y recorta el objeto en un móvil vertical. Se
+  calcula lo que necesita cada eje y se usa la mayor.
+*/
+const HALF_H = 0.53 * WORLD_SCALE;   // el isotipo va de y -0.5186 a 0.5215
+const HALF_W = 0.42 * WORLD_SCALE;   // y de x -0.4108 a 0.4115
+/* Deja aire por debajo: la pieza no ocupa el centro del encuadre, comparte
+   cuadro con su reflejo y hay que dejar sitio para que éste se apague dentro
+   de la pantalla en vez de cortarse contra el borde inferior. */
+const FILL_FRACTION = 0.50;
+
+function fitDistance(aspect) {
+  const tanHalfV = Math.tan((camera.fov * Math.PI) / 360);
+  return Math.max(
+    HALF_H / FILL_FRACTION / tanHalfV,
+    HALF_W / FILL_FRACTION / (tanHalfV * aspect)
+  );
+}
+
+/*
+  El isotipo no va centrado en pantalla: se sube para dejar sitio al reflejo.
+  Ese desplazamiento tiene que ser una FRACCIÓN del encuadre, no un valor fijo
+  en unidades de mundo — la distancia de encuadre casi se dobla entre apaisado
+  y móvil vertical (16.6 vs 28.6), así que un offset fijo que centra bien en
+  16:9 deja el objeto pegado arriba con medio cuadro vacío en 9:19.
+*/
+const RAISE = 0.12;  // sube el centro del objeto un 12% del semi-alto visible
+
+function framing(aspect) {
+  const dist = fitDistance(aspect);
+  const halfV = dist * Math.tan((camera.fov * Math.PI) / 360);
+  return { dist, targetY: -RAISE * halfV };
+}
+
+const initial = framing(window.innerWidth / window.innerHeight);
+const TARGET = new THREE.Vector3(0, initial.targetY, 0);
+/* Elevación también proporcional, para que el ángulo de picado sea el mismo
+   en cualquier pantalla. */
+camera.position.set(0, initial.targetY + initial.dist * 0.09, initial.dist);
+
+/* El entorno es lo que produce los reflejos sobre las caras: sin envMap, un
+   material físico sólo tiene el brillo puntual de las luces y se ve plano. */
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.32;
+
+/* ── Perfil redondeado ────────────────────────────────────────────────────── */
+/*
+  Filete clásico en cada vértice: se retrocede una distancia t = r/tan(θ/2)
+  por ambos lados y se une con una cuadrática cuyo control es el vértice
+  original. t se recorta a la mitad del lado más corto para que dos esquinas
+  contiguas nunca se solapen — sin ese recorte, las puntas agudas (θ pequeño)
+  producirían t enormes y el polígono se plegaría sobre sí mismo.
+*/
+function roundedShape(points, radius) {
+  const v = points.map(([x, y]) => new THREE.Vector2(x, y));
+  const n = v.length;
+  const shape = new THREE.Shape();
+
+  for (let i = 0; i < n; i++) {
+    const cur = v[i];
+    const d1 = v[(i - 1 + n) % n].clone().sub(cur);
+    const d2 = v[(i + 1) % n].clone().sub(cur);
+    const l1 = d1.length();
+    const l2 = d2.length();
+    d1.divideScalar(l1);
+    d2.divideScalar(l2);
+
+    const theta = Math.acos(THREE.MathUtils.clamp(d1.dot(d2), -1, 1));
+    const t = Math.min(radius / Math.tan(theta / 2), l1 * 0.5, l2 * 0.5);
+
+    const a = cur.clone().addScaledVector(d1, t);
+    const b = cur.clone().addScaledVector(d2, t);
+
+    if (i === 0) shape.moveTo(a.x, a.y);
+    else shape.lineTo(a.x, a.y);
+    shape.quadraticCurveTo(cur.x, cur.y, b.x, b.y);
+  }
+
+  shape.closePath();
+  return shape;
+}
+
+const extrudeSettings = {
+  depth: DEPTH,
+  bevelEnabled: true,
+  bevelThickness: 0.016,
+  bevelSize: 0.014,
+  bevelSegments: 4,
+  curveSegments: 14,
+};
+
+function buildPiece(points, material) {
+  const geo = new THREE.ExtrudeGeometry(roundedShape(points, CORNER), extrudeSettings);
+  /* La extrusión crece en +Z desde el plano del perfil; centrarla para que las
+     tres piezas queden coplanares y el conjunto orbite sobre su propio centro
+     en vez de girar en torno a su cara frontal. */
+  geo.translate(0, 0, -DEPTH / 2);
+  const mesh = new THREE.Mesh(geo, material);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  return mesh;
+}
+
+/* Plástico saturado con laca: el clearcoat es la capa especular fina que da el
+   reflejo nítido de la referencia por encima del color difuso. */
+function brandMaterial(color) {
+  return new THREE.MeshPhysicalMaterial({
+    color,
+    roughness: 0.38,
+    metalness: 0.0,
+    clearcoat: 0.9,
+    clearcoatRoughness: 0.08,
+    envMapIntensity: 0.9,
+  });
+}
+
+const matViolet = brandMaterial(COLOR_VIOLET);
+const matYellow = brandMaterial(COLOR_YELLOW);
+
+const root = new THREE.Group();
+root.add(
+  buildPiece(VIOLET_BODY, matViolet),
+  buildPiece(YELLOW_BAND, matYellow),
+  buildPiece(YELLOW_TIP,  matYellow)
+);
+root.scale.setScalar(WORLD_SCALE);
+scene.add(root);
+
+/* ── Suelo: espejo + sombra proyectada ────────────────────────────────────── */
+/*
+  Dos planos apilados porque cada efecto necesita un material distinto y no se
+  pueden combinar en uno: Reflector lleva su propio shader (renderiza la escena
+  desde la cámara reflejada) y no admite recibir sombras, así que la sombra va
+  en un plano ShadowMaterial justo encima — transparente salvo donde cae.
+*/
+const mirror = new Reflector(new THREE.PlaneGeometry(80, 80), {
+  clipBias: 0.003,
+  /* Fijo, no escalado por devicePixelRatio: Reflector vuelve a renderizar toda
+     la escena en esta textura cada frame, y el reflejo va tan atenuado por el
+     degradado que 2048 no aporta nada visible y duplica el coste en retina. */
+  textureWidth: 1024,
+  textureHeight: 1024,
+  /* Multiplica lo reflejado. Un espejo a plena intensidad compite con la pieza
+     real y se lee como un segundo objeto, no como un suelo. */
+  color: 0x1c1828,
+});
+mirror.rotation.x = -Math.PI / 2;
+mirror.position.y = GROUND_Y;
+scene.add(mirror);
+
+const shadowPlane = new THREE.Mesh(
+  new THREE.PlaneGeometry(80, 80),
+  new THREE.ShadowMaterial({ opacity: 0.55 })
+);
+shadowPlane.rotation.x = -Math.PI / 2;
+shadowPlane.position.y = GROUND_Y + 0.01;
+shadowPlane.receiveShadow = true;
+scene.add(shadowPlane);
+
+/*
+  Desvanecido del espejo hacia el horizonte. Reflector no admite niebla (su
+  shader no incluye el chunk de fog), así que el degradado va como un plano
+  encima: transparente bajo el objeto, opaco del color de fondo hacia fuera.
+*/
+const fadeCanvas = document.createElement('canvas');
+fadeCanvas.width = fadeCanvas.height = 256;
+const fctx = fadeCanvas.getContext('2d');
+/* El degradado se cierra al 22% del radio (≈9 unidades de las 40 del semiplano):
+   así los últimos 30 son opacos del color de fondo y el borde del plano nunca
+   se lee como una línea de horizonte. */
+const fadeGrad = fctx.createRadialGradient(128, 128, 10, 128, 128, 128);
+fadeGrad.addColorStop(0.00, 'rgba(6,5,12,0.32)');
+fadeGrad.addColorStop(0.06, 'rgba(6,5,12,0.80)');
+fadeGrad.addColorStop(0.15, 'rgba(6,5,12,1)');
+fadeGrad.addColorStop(1.00, 'rgba(6,5,12,1)');
+fctx.fillStyle = fadeGrad;
+fctx.fillRect(0, 0, 256, 256);
+
+const fadeTex = new THREE.CanvasTexture(fadeCanvas);
+/* Una CanvasTexture se asume lineal si no se declara: sin esto el #06050C del
+   degradado se re-codifica a sRGB en la salida y sale gris claro, muy por
+   encima del fondo. */
+fadeTex.colorSpace = THREE.SRGBColorSpace;
+
+const fadePlane = new THREE.Mesh(
+  new THREE.PlaneGeometry(80, 80),
+  new THREE.MeshBasicMaterial({
+    map: fadeTex,
+    transparent: true,
+    depthWrite: false,
+    /* Sin esto el degradado pasa por el tone mapping y scene.background no, así
+       que el mismo #06050C sale con dos valores distintos y el borde del plano
+       se lee como una línea de horizonte contra el fondo. */
+    toneMapped: false,
+  })
+);
+fadePlane.rotation.x = -Math.PI / 2;
+fadePlane.position.y = GROUND_Y + 0.02;
+scene.add(fadePlane);
+
+/* ── Luces ────────────────────────────────────────────────────────────────── */
+scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+
+/* Muy cenital y ligeramente adelantada: así la sombra cae bajo la pieza en vez
+   de escaparse fuera de cuadro, y la cara superior de cada sólido queda mucho
+   más clara que los cantos — es ese contraste el que da volumen. */
+const key = new THREE.DirectionalLight(0xffffff, 2.2);
+key.position.set(2.0, 7.5, 3.0);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.radius = 4;
+key.shadow.bias = -0.0006;
+key.shadow.normalBias = 0.02;
+/* La cámara de sombra por defecto (±5) recorta el objeto, que mide ~5 de alto
+   y proyecta bastante más al estar la luz en diagonal. */
+const sc = key.shadow.camera;
+sc.left = -7; sc.right = 7; sc.top = 7; sc.bottom = -7;
+sc.near = 0.5; sc.far = 30;
+sc.updateProjectionMatrix();
+scene.add(key);
+
+/* Rebotes de color de marca — dan el contorno cálido/frío de la referencia
+   sin lavar el color propio de cada pieza. */
+const rimYellow = new THREE.PointLight(0xf5f102, 22, 0, 2);
+rimYellow.position.set(-4.2, -1.4, 3.0);
+scene.add(rimYellow);
+
+const rimViolet = new THREE.PointLight(0x9b7cff, 18, 0, 2);
+rimViolet.position.set(4.0, -0.8, -3.0);
+scene.add(rimViolet);
+
+/* ── Controles ────────────────────────────────────────────────────────────── */
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.copy(TARGET);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.enablePan = false;
+/* Se impide bajar la cámara por debajo del suelo: desde ahí se ve el espejo
+   por su cara trasera y el reflejo se lee al revés. */
+controls.maxPolarAngle = Math.PI * 0.52;
+
+let baseFitDistance = fitDistance(camera.aspect);
+controls.minDistance = baseFitDistance * 0.45;
+controls.maxDistance = baseFitDistance * 1.8;
+controls.autoRotate = !reduced;
+controls.autoRotateSpeed = 1.6;
+controls.update();
+
+let idleTimer = null;
+function pauseAutoRotate() {
+  controls.autoRotate = false;
+  clearTimeout(idleTimer);
+  if (!reduced) idleTimer = setTimeout(() => { controls.autoRotate = true; }, 3200);
+}
+renderer.domElement.addEventListener('pointerdown', pauseAutoRotate);
+renderer.domElement.addEventListener('wheel', pauseAutoRotate, { passive: true });
+
+/* ── Bucle ────────────────────────────────────────────────────────────────── */
+const clock = new THREE.Clock();
+let visible = true;
+document.addEventListener('visibilitychange', () => { visible = !document.hidden; });
+
+function frame() {
+  requestAnimationFrame(frame);
+  if (!visible) return;
+  controls.update(Math.min(clock.getDelta(), 1 / 30));
+  renderer.render(scene, camera);
+}
+frame();
+
+/* ── Resize ───────────────────────────────────────────────────────────────── */
+let resizeRaf = 0;
+window.addEventListener('resize', () => {
+  cancelAnimationFrame(resizeRaf);
+  resizeRaf = requestAnimationFrame(() => {
+    const aspect = window.innerWidth / window.innerHeight;
+    camera.aspect = aspect;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    /* Re-encuadrar conservando la órbita y el zoom relativo del usuario, en vez
+       de devolverlo de golpe al encuadre por defecto en cada resize. */
+    const zoomRatio = camera.position.distanceTo(controls.target) / baseFitDistance;
+    const dir = camera.position.clone().sub(controls.target).normalize();
+
+    const next = framing(aspect);
+    baseFitDistance = next.dist;
+    controls.minDistance = baseFitDistance * 0.45;
+    controls.maxDistance = baseFitDistance * 1.8;
+    controls.target.set(0, next.targetY, 0);
+
+    const clamped = THREE.MathUtils.clamp(zoomRatio, 0.45, 1.8);
+    camera.position.copy(dir.multiplyScalar(baseFitDistance * clamped).add(controls.target));
+  });
+}, { passive: true });
+</script>
+</body>
+</html>

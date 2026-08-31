@@ -1,0 +1,163 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply font-sans text-ink antialiased bg-canvas;
+}
+
+::selection {
+  @apply bg-accent text-ink;
+}
+
+:focus-visible {
+  outline: 2px solid #532ce1;
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+/*
+ * Cristal del navbar: GlassSurface (components/GlassSurface.jsx) genera su
+ * propio mapa de desplazamiento por canal RGB y lo aplica vía backdrop-filter
+ * — es el mismo mecanismo que el "liquid glass" de Apple, no un blur CSS
+ * plano. Estos dos ajustes solo adaptan ese componente (pensado para un
+ * elemento tipo pill centrado) a una barra que ocupa todo el ancho.
+ */
+.navbar-liquid-glass .glass-surface__content {
+  padding: 0;
+}
+
+/*
+ * GlassSurface escribe alto, radio y opacidad como estilos inline según el
+ * estado de scroll; la clase base solo transiciona `opacity`, así que sin
+ * esto el paso barra → dock sería un salto seco. Misma curva y duración que
+ * las utilidades del Navbar para que todo el encogido viaje junto.
+ */
+/* Misma duración y curva que DOCK_MOTION en Navbar.jsx — si cambia una, cambian
+   las dos, o el alto vuelve a desacompasarse del ancho. */
+.navbar-liquid-glass.glass-surface {
+  transition:
+    height 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-radius 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    background 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 420ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.26s ease-out;
+}
+
+/*
+ * GlassSurface trae de serie un juego de sombras (exteriores e interiores)
+ * que en una barra a todo el ancho dibujan una línea separando el navbar del
+ * contenido. Arriba del todo la barra debe leerse plana, fundida con la
+ * página; el relieve aparece solo cuando el scroll la convierte en dock.
+ * Gana por especificidad (dos clases) sobre .glass-surface--svg/--fallback.
+ */
+.navbar-liquid-glass.glass-surface--flat {
+  box-shadow: none;
+}
+
+/*
+ * ── GooeyNav en tema claro ────────────────────────────────────────────────
+ *
+ * El componente viene calibrado para fondo OSCURO y OPACO: píldora y
+ * partículas blancas sobre un `::before` negro, fundidas con
+ * `mix-blend-mode: lighten`. Ese truco (blur + contrast(100)) necesita
+ * píxeles opacos debajo para que el contraste separe las gotas, y necesita
+ * que el blend tenga contra qué resolverse.
+ *
+ * Aquí no se cumple ninguna de las dos: el navbar es un cristal TRANSLÚCIDO,
+ * así que dentro de su contexto de apilamiento el backdrop es casi
+ * transparente y el rectángulo del `::before` se pinta tal cual — un
+ * cuadrado sólido flotando junto al menú.
+ *
+ * La solución no es recolorear sino cambiar de técnica: un filtro SVG que
+ * opera sobre el CANAL ALFA (feGaussianBlur + feColorMatrix amplificando
+ * alfa) produce las mismas metabolas pero con transparencia real, sin
+ * backdrop y sin blend. Ver el <svg> oculto en Navbar.jsx.
+ */
+.clapi-gooey-nav .gooey-nav-container .effect.filter {
+  filter: url(#clapi-goo);
+  mix-blend-mode: normal;
+}
+
+.clapi-gooey-nav .gooey-nav-container .effect.filter::before {
+  display: none;
+}
+
+.clapi-gooey-nav .gooey-nav-container nav ul {
+  gap: 1.4em;
+  padding: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgb(13 11 20 / 0.8);
+  text-shadow: none;
+}
+
+.clapi-gooey-nav .gooey-nav-container nav ul li {
+  color: rgb(13 11 20 / 0.8);
+  white-space: nowrap;
+}
+
+/* Hover en negro (el del logo), no en morado. */
+.clapi-gooey-nav .gooey-nav-container nav ul li:hover {
+  color: #0d0b14;
+}
+
+.clapi-gooey-nav .gooey-nav-container nav ul li a {
+  padding: 0.5em 0.9em;
+}
+
+/* Píldora oscura en vez de blanca, con el texto invertido encima. */
+.clapi-gooey-nav .gooey-nav-container nav ul li::after {
+  background: #0d0b14;
+}
+
+/*
+ * `!important` a conciencia: GooeyNav.css fija el color del item activo en su
+ * propio tema (negro sobre píldora blanca) y aquí se invierte el par entero.
+ * Sin esto el texto activo se queda oscuro sobre la píldora oscura, ilegible.
+ */
+.clapi-gooey-nav .gooey-nav-container nav ul li.active,
+.clapi-gooey-nav .gooey-nav-container nav ul li.active a,
+.clapi-gooey-nav .gooey-nav-container nav ul li.active:hover {
+  color: #ffffff !important;
+}
+
+.clapi-gooey-nav .gooey-nav-container .effect.text {
+  color: #0d0b14;
+}
+
+.clapi-gooey-nav .gooey-nav-container .effect.text.active {
+  color: #ffffff;
+}
+
+.clapi-gooey-nav .gooey-nav-container .effect.filter::after {
+  background: #0d0b14;
+}
+
+/*
+ * Las cuatro ranuras de color van al mismo negro a propósito: `contrast(100)`
+ * satura cualquier tinte a un primario puro (el morado de marca saldría azul
+ * eléctrico), así que un solo color es lo único que se mantiene limpio.
+ */
+.clapi-gooey-nav {
+  --color-1: #0d0b14;
+  --color-2: #0d0b14;
+  --color-3: #0d0b14;
+  --color-4: #0d0b14;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

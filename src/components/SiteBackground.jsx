@@ -65,15 +65,14 @@ export default function SiteBackground() {
 
       {/* Velo superior: baja el color justo en la franja del navbar, para que
           el cristal no tenga que desenfocar color saturado — que es cuando se
-          ve sucio y distorsionado. */}
-      {/* Más corto en móvil: a 26vh de una pantalla en retrato el velo se come
-          justo la franja donde está el titular y el fondo se ve blanco. */}
-      <div className="absolute inset-x-0 top-0 h-[15vh] bg-gradient-to-b from-canvas via-canvas/60 to-transparent sm:h-[26vh]" />
+          ve sucio y distorsionado.
 
-      {/* Lavado extra solo en móvil: en retrato el haz ocupa proporcionalmente
-          más pantalla que en desktop/tablet, así que se le resta un poco de
-          presencia con blanco de fondo — sutil a propósito, no toca sm+. */}
-      <div className="absolute inset-0 bg-canvas/15 sm:hidden" />
+          En móvil va MUCHO más suave (55% → 0 en vez de opaco → 0). Con el
+          velo opaco la barra de cristal desenfocaba blanco puro y se leía
+          como una tira blanca pegada encima de la página, con un corte duro
+          justo donde terminaba; además apagaba el haz en el tercio superior,
+          que es casi todo lo que se ve en un móvil sin scrollear. */}
+      <div className="absolute inset-x-0 top-0 h-[22vh] bg-gradient-to-b from-canvas/55 via-canvas/20 to-transparent sm:h-[26vh] sm:from-canvas sm:via-canvas/60" />
     </div>
   );
 }

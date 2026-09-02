@@ -14,7 +14,7 @@ export default function FinalCTA() {
     >
       <Container>
         <SectionReveal className="mx-auto max-w-2xl text-center">
-          <h2 className="text-4xl font-semibold leading-tight text-white sm:text-[44px]">
+          <h2 className="text-[30px] font-semibold leading-tight text-white sm:text-[44px]">
             ¿Listo para automatizar lo que te quita tiempo?
           </h2>
           <p className="mx-auto mt-6 max-w-[600px] text-lg leading-relaxed text-white/80">

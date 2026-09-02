@@ -26,10 +26,10 @@ export default function Evolves() {
     <section id="evoluciona" className="py-20 md:py-32">
       <Container>
         <SectionReveal className="mx-auto max-w-3xl text-center">
-          <h2 className="text-4xl font-semibold leading-tight text-ink sm:text-[44px]">
+          <h2 className="text-[30px] font-semibold leading-tight text-ink sm:text-[44px]">
             Lo que construimos no se queda quieto
           </h2>
-          <p className="mx-auto mt-6 max-w-[650px] text-xl leading-relaxed text-ink/80">
+          <p className="mx-auto mt-6 max-w-[650px] text-lg leading-relaxed text-ink/80 sm:text-xl">
             Tu automatización evoluciona contigo. Incluimos actualizaciones sin costo adicional
             para que tu sistema mejore con el tiempo — no se degrade.
           </p>

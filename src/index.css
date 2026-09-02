@@ -41,11 +41,50 @@ body {
   box-shadow: none;
 }
 
-/* El fallback de GlassSurface (el que se usa en móvil y en Safari/Firefox)
-   trae un borde blanco de 1px que vuelve a dibujar la línea que separa el
-   navbar del contenido — justo lo que se quería evitar. */
+/*
+ * El fallback de GlassSurface (el que se usa en móvil y en Safari/Firefox)
+ * trae un borde blanco de 1px que vuelve a dibujar la línea que separa el
+ * navbar del contenido — justo lo que se quería evitar.
+ *
+ * También se rebajan sus filtros: `brightness(1.1) saturate(1.8)` está
+ * pensado para una píldora pequeña sobre fondo oscuro. En una barra a todo
+ * el ancho sobre el haz de color, aclara y satura SOLO esa franja, así que
+ * la barra se recorta del fondo como un rectángulo distinto en vez de dejar
+ * ver lo que tiene detrás. Sin el realce, el desenfoque solo, es cristal.
+ */
 .navbar-liquid-glass.glass-surface--fallback {
   border: none;
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(16px) saturate(1.1);
+  -webkit-backdrop-filter: blur(16px) saturate(1.1);
+}
+
+/*
+ * Difumina el borde inferior de la barra en móvil. El desenfoque termina en
+ * una línea recta a lo ancho de la pantalla, y ese corte es lo que hacía que
+ * la barra pareciera pegada encima de la página en vez de parte de ella.
+ * Solo afecta al pseudo-elemento del fondo, no al contenido: el logo y el
+ * botón de menú viven en `.glass-surface__content`, que va por encima.
+ */
+@media (max-width: 767px) {
+  .navbar-liquid-glass.glass-surface {
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .navbar-liquid-glass.glass-surface::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(16px) saturate(1.1);
+    -webkit-backdrop-filter: blur(16px) saturate(1.1);
+    -webkit-mask-image: linear-gradient(to bottom, #000 62%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 62%, transparent 100%);
+  }
 }
 
 /*

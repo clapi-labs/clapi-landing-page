@@ -70,7 +70,7 @@ export default function Tailored() {
       <Container>
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
           <SectionReveal>
-            <h2 className="text-4xl font-semibold leading-tight text-ink sm:text-[44px]">
+            <h2 className="text-[30px] font-semibold leading-tight text-ink sm:text-[44px]">
               Tu solución, diseñada a tu medida
             </h2>
             <p className="mt-6 max-w-[550px] text-lg leading-relaxed text-ink/80">
@@ -88,27 +88,36 @@ export default function Tailored() {
           </SectionReveal>
         </div>
 
-        {/* Pasos compactos: solo círculo + nombre, conectados por una línea. */}
-        <div className="relative mt-20">
-          {/* La línea vive detrás de los círculos y solo en desktop, que es
-              donde los pasos van en fila. En móvil van apilados y una línea
-              horizontal no conectaría nada. */}
+        {/* Pasos compactos: solo círculo + nombre, conectados por una línea.
+            En móvil la fila se convierte en línea de tiempo vertical — un 2×2
+            suelto no comunica secuencia, y el conector horizontal no conecta
+            nada cuando los pasos están apilados. */}
+        <div className="relative mt-16 md:mt-20">
+          {/* Conector vertical (móvil): de centro a centro de los círculos.
+              `left-7` y `top/bottom-7` = 28px = radio del círculo (h-14). */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute bottom-7 left-7 top-7 w-0.5 bg-brand/30 md:hidden"
+          />
+          {/* Conector horizontal (md+): mismos centros, en fila. */}
           <div
             aria-hidden="true"
             className="pointer-events-none absolute left-[12.5%] right-[12.5%] top-7 hidden h-0.5 bg-brand/30 md:block"
           />
 
-          <div className="grid grid-cols-2 gap-y-10 md:grid-cols-4">
+          {/* Los pasos van DESPUÉS de las líneas en el DOM y son `relative`,
+              así que se pintan encima y tapan el tramo que les toca. */}
+          <div className="flex flex-col gap-8 md:grid md:grid-cols-4 md:gap-0">
             {STEPS.map(({ Icon, title }, i) => (
               <SectionReveal
                 key={title}
                 delay={i * 0.08}
-                className="relative flex flex-col items-center gap-3"
+                className="relative flex items-center gap-5 md:flex-col md:gap-3"
               >
-                <span className="flex h-14 w-14 items-center justify-center rounded-full bg-brand">
+                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-brand">
                   <Icon className="h-6 w-6 text-white" />
                 </span>
-                <p className="text-sm font-semibold text-ink">{title}</p>
+                <p className="text-base font-semibold text-ink md:text-sm">{title}</p>
               </SectionReveal>
             ))}
           </div>

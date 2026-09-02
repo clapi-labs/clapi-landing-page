@@ -35,7 +35,7 @@ export default function Audiences() {
     <section id="para-quien" className="py-20 md:py-32">
       <Container>
         <SectionReveal className="mx-auto max-w-3xl text-center">
-          <h2 className="text-4xl font-semibold leading-tight text-ink sm:text-[44px]">
+          <h2 className="text-[30px] font-semibold leading-tight text-ink sm:text-[44px]">
             No necesitas ser una gran empresa para automatizar
           </h2>
           <p className="mx-auto mt-6 max-w-[650px] text-lg leading-relaxed text-ink/80">

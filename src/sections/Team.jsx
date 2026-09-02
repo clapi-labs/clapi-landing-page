@@ -24,7 +24,7 @@ export default function Team() {
           </SectionReveal>
 
           <SectionReveal delay={0.12}>
-            <h2 className="text-4xl font-semibold leading-tight text-ink sm:text-[44px]">
+            <h2 className="text-[30px] font-semibold leading-tight text-ink sm:text-[44px]">
               Un equipo que sabe lo que hace
             </h2>
             <p className="mt-6 max-w-[550px] text-lg leading-relaxed text-ink/80">

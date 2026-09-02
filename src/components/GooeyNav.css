@@ -35,35 +35,67 @@
   display: flex;
   position: relative;
   transform: translate3d(0, 0, 0.01px);
+  /*
+   * Imprescindible. El `transform` de arriba crea un contexto de apilamiento,
+   * así que el `z-index: 3` del <ul> queda ENCERRADO dentro del <nav> y, hacia
+   * fuera, el nav compite como `auto` (0) contra `.effect` (z-index 1). El
+   * resultado es que la capa gooey se pinta por encima del texto: píldora
+   * negra sin etiqueta.
+   *
+   * En el tema original no se veía porque el blend `lighten` volvía
+   * transparente el negro y la etiqueta visible era en realidad `.effect.text`
+   * (la copia). Aquí se muestra el <li> real, así que el nav tiene que ir por
+   * encima de la capa de efecto.
+   */
+  z-index: 2;
 }
 
+/*
+ * ── Tema claro, horneado aquí a propósito ─────────────────────────────────
+ *
+ * El componente nace para fondo oscuro (texto y píldora blancos). Los valores
+ * invertidos van en ESTE archivo y no como overrides en index.css porque los
+ * overrides perdían la cascada contra estas reglas pese a tener más
+ * especificidad, y el síntoma era el peor posible: el item que dejaba de
+ * estar activo se quedaba con el color del activo (texto blanco sobre barra
+ * clara = invisible, o una caja negra suelta). Una sola fuente de verdad
+ * elimina esa clase de bug entera.
+ */
 .gooey-nav-container nav ul {
   display: flex;
-  gap: 2em;
+  gap: 1.4em;
   list-style: none;
-  padding: 0 1em;
+  padding: 0;
   margin: 0;
   position: relative;
   z-index: 3;
-  color: white;
-  text-shadow: 0 1px 1px hsl(205deg 30% 10% / 0.2);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgb(13 11 20 / 0.8);
+  text-shadow: none;
 }
 
 .gooey-nav-container nav ul li {
   border-radius: 100vw;
   position: relative;
   cursor: pointer;
+  white-space: nowrap;
   transition:
     background-color 0.3s ease,
     color 0.3s ease,
     box-shadow 0.3s ease;
   box-shadow: 0 0 0.5px 1.5px transparent;
-  color: white;
+  color: rgb(13 11 20 / 0.8);
+}
+
+/* Hover en el negro del logo, no en el morado de marca. */
+.gooey-nav-container nav ul li:hover {
+  color: #0d0b14;
 }
 
 .gooey-nav-container nav ul li a {
   display: inline-block;
-  padding: 0.6em 1em;
+  padding: 0.5em 0.9em;
 }
 
 .gooey-nav-container nav ul li:focus-within:has(:focus-visible) {
@@ -74,16 +106,17 @@
   content: '';
   position: absolute;
   inset: 0;
-  border-radius: 10px;
-  background: white;
+  border-radius: 100vw;
+  background: #0d0b14;
   opacity: 0;
   transform: scale(0);
   transition: all 0.3s ease;
   z-index: -1;
 }
 
-.gooey-nav-container nav ul li.active {
-  color: black;
+.gooey-nav-container nav ul li.active,
+.gooey-nav-container nav ul li.active:hover {
+  color: #ffffff;
   text-shadow: none;
 }
 
@@ -105,33 +138,33 @@
   z-index: 1;
 }
 
+/*
+ * Copia del label que el componente sitúa sobre el item activo para cruzar el
+ * color. Sobra: el <li> va en z-index 3, siempre por encima, y ya cambia de
+ * color solo. Además se reposiciona por ResizeObserver, así que al encoger el
+ * navbar a dock iba un frame por detrás y el texto se veía duplicado.
+ */
 .gooey-nav-container .effect.text {
-  color: white;
-  transition: color 0.3s ease;
+  display: none;
 }
 
-.gooey-nav-container .effect.text.active {
-  color: black;
-}
-
+/*
+ * El original hace la fusión "gooey" con blur + contrast(100) sobre un
+ * `::before` negro y `mix-blend-mode: lighten`. Eso exige píxeles OPACOS
+ * debajo, y aquí el navbar es un cristal translúcido: el backdrop del blend
+ * queda casi transparente y ese rectángulo se pintaba tal cual, como un
+ * cuadrado sólido junto al menú. Un filtro SVG sobre el canal ALFA (definido
+ * en Navbar.jsx) da las mismas metabolas con transparencia real.
+ */
 .gooey-nav-container .effect.filter {
-  filter: blur(7px) contrast(100) blur(0);
-  mix-blend-mode: lighten;
-}
-
-.gooey-nav-container .effect.filter::before {
-  content: '';
-  position: absolute;
-  inset: -75px;
-  z-index: -2;
-  background: black;
+  filter: url(#clapi-goo);
 }
 
 .gooey-nav-container .effect.filter::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: white;
+  background: #0d0b14;
   transform: scale(0);
   opacity: 0;
   z-index: -1;
@@ -147,6 +180,18 @@
     transform: scale(1);
     opacity: 1;
   }
+}
+
+/*
+ * Las cuatro ranuras de color al mismo negro a propósito: el filtro satura
+ * cualquier tinte, así que el morado de marca saldría azul eléctrico. Un solo
+ * color es lo único que se mantiene limpio.
+ */
+.gooey-nav-container {
+  --color-1: #0d0b14;
+  --color-2: #0d0b14;
+  --color-3: #0d0b14;
+  --color-4: #0d0b14;
 }
 
 .particle,

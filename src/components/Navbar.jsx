@@ -1,48 +1,63 @@
 import { useEffect, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Button from './Button.jsx';
 import GlareHover from './GlareHover.jsx';
 import GooeyNav from './GooeyNav.jsx';
+import StaggeredMenu from './StaggeredMenu.jsx';
 import GlassSurface from './GlassSurface.jsx';
 import { SHELL_PADDING } from './Container.jsx';
+import { useChat } from '../context/ChatContext.jsx';
 import logoDark from '../assets/logotipo-dark.png';
 
-const BAR_HEIGHT = 80; // barra completa, arriba del todo
-const DOCK_HEIGHT = 64; // dock encogido, ya scrolleando
-// Mismo lenguaje de esquinas que el resto de la UI: `rounded-card` es 20px
-// para tarjetas; el dock es una superficie mayor, así que escala a 24 — igual
-// que un ícono de app y su UI comparten curvatura sin ser el mismo número.
-const DOCK_RADIUS = 24;
-
-/*
- * Una sola duración y una sola curva para TODO lo que se mueve al pasar a
- * dock: ancho, alto, radio, sombra y logo. Antes el wrapper usaba el
- * `ease-out` de Tailwind y el cristal su propia cubic-bezier — dos curvas
- * distintas para partes del mismo gesto, que es lo que hacía que el ancho y
- * el alto llegaran desacompasados y se sintiera raro. Debe ir en index.css
- * también (la transición de GlassSurface).
- */
-const DOCK_MOTION = 'duration-[420ms] ease-[cubic-bezier(0.22,1,0.36,1)]';
+// Barra fija, sin animación de encogido al hacer scroll: siempre el mismo
+// aspecto, a lo ancho y plana — no la píldora flotante que había en el
+// estado "scrolled" antes. El cristal queda siempre puesto pero atenuado,
+// para que se sienta como parte de la página y no como una tarjeta suelta
+// encima de ella.
+const NAV_HEIGHT = 80;
 
 const LINKS = [
-  { href: '#servicios', label: 'Servicios' },
-  { href: '#proceso', label: 'Proceso' },
-  { href: '#por-que-clapi', label: 'Por qué Clapi' },
-  { href: '#casos', label: 'Casos de éxito' },
+  { href: '/servicios', label: 'Servicios' },
+  { href: '/proyectos', label: 'Proyectos' },
+  { href: '/precios', label: 'Precios' },
+  { href: '/nosotros', label: 'Nosotros' },
+];
+
+// El menú móvil añade el CTA como un ítem más: StaggeredMenu no admite
+// contenido suelto en el panel, y el drawer anterior sí llevaba el botón.
+// `link: '#chat'` es un valor sentinel interceptado por `handleNavClick` para
+// abrir el chat en vez de navegar — StaggeredMenu solo sabe renderizar <a>.
+const MENU_ITEMS = [
+  ...LINKS.map((link) => ({ label: link.label, ariaLabel: `Ir a ${link.label}`, link: link.href })),
+  { label: 'Hablemos', ariaLabel: 'Abrir el chat de Clapi', link: '#chat' },
 ];
 
 export default function Navbar() {
-  const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { openChat } = useChat();
+  // El logo navega a "/" pero no pasa por el onClick de GooeyNav (no es uno
+  // de sus <a>), así que la píldora de la última sección visitada se quedaba
+  // marcada. `cleared` fuerza a -1 en cuanto la ruta es home.
+  const onHome = location.pathname === '/';
 
-  useEffect(() => {
-    function onScroll() {
-      setScrolled(window.scrollY > 8);
+  // Delegación de click a nivel de contenedor: GooeyNav y StaggeredMenu
+  // renderizan <a> normales (no se tocan sus internals) — aquí se intercepta
+  // el click ANTES de que el navegador siga el href, para convertir rutas
+  // internas en navegación SPA y el sentinel '#chat' en apertura del panel.
+  function handleNavClick(e) {
+    const anchor = e.target.closest('a');
+    if (!anchor) return;
+    const href = anchor.getAttribute('href');
+    if (href === '#chat') {
+      e.preventDefault();
+      openChat();
+    } else if (href && href.startsWith('/')) {
+      e.preventDefault();
+      navigate(href);
     }
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  }
 
   // Bloquea el scroll del body mientras el panel mobile está abierto.
   useEffect(() => {
@@ -53,7 +68,7 @@ export default function Navbar() {
   }, [menuOpen]);
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50">
+    <header className="fixed inset-x-0 top-0 z-50" onClick={handleNavClick}>
       {/*
         Filtro "gooey" sobre el canal alfa: el blur difumina las partículas y
         el feColorMatrix multiplica su alfa (×19, offset −9) para volver a
@@ -73,176 +88,109 @@ export default function Navbar() {
       </svg>
 
       {/*
-        El encogido a dock se hace con max-width en vez de con un transform:
-        `max-w-full` → `max-w-shell` interpola bien porcentaje contra px, y así
-        el contenido interior se re-maqueta de verdad (el cristal, la sombra y
-        el radio siguen al elemento) en lugar de deformarse por escala.
-
-        Ya encogido usa el MISMO `max-w-shell` + padding que `Container`, así
-        que el borde exterior del dock cae exactamente sobre el borde del
-        contenido de abajo — no es un ancho propio del navbar. Full width, por
-        tanto, solo existe arriba del todo y solo para la barra.
+        Barra plana a lo ancho, pegada arriba del todo — sin radio, sin
+        sombra, sin margen. El cristal se nota por el desenfoque/saturación
+        del fondo, no por una forma flotando encima de la página.
       */}
-      <div
-        className={`mx-auto w-full transition-[max-width,padding] ${DOCK_MOTION} ${
-          scrolled ? `max-w-shell ${SHELL_PADDING} pt-3` : 'max-w-full px-0 pt-0'
-        }`}
+      <GlassSurface
+        width="100%"
+        height={NAV_HEIGHT}
+        borderRadius={0}
+        backgroundOpacity={0.08}
+        saturation={1.15}
+        className="navbar-liquid-glass glass-surface--flat"
       >
-        {/*
-          Arriba del todo la barra va COMPLETAMENTE plana: ni sombra propia ni
-          las que trae GlassSurface (de ahí `glass-surface--flat`). Cualquier
-          sombra ahí dibuja una línea que separa el navbar del contenido, y la
-          idea es justo la contraria: que al inicio se funda con la página y
-          solo destaque cuando el scroll lo convierte en dock.
-        */}
-        <div
-          className={`relative transition-[box-shadow,border-radius] ${DOCK_MOTION} ${
-            scrolled ? 'shadow-[0_22px_50px_-22px_rgba(13,11,20,0.45)]' : 'shadow-none'
-          }`}
-          style={{ borderRadius: scrolled ? DOCK_RADIUS : 0 }}
-        >
-          <GlassSurface
-            width="100%"
-            height={scrolled ? DOCK_HEIGHT : BAR_HEIGHT}
-            borderRadius={scrolled ? DOCK_RADIUS : 0}
-            backgroundOpacity={scrolled ? 0.2 : 0.1}
-            saturation={scrolled ? 1.4 : 1.2}
-            className={`navbar-liquid-glass ${scrolled ? '' : 'glass-surface--flat'}`}
-          >
-            {/*
-              Sin scroll usa el mismo ancho y padding que `Container`, para que
-              el logo caiga exactamente sobre la vertical del titular del hero.
-              Ya como dock ese margen lo pone el wrapper de fuera, así que aquí
-              solo queda el aire mínimo del propio dock.
-            */}
-            <div
-              className={`mx-auto grid h-full w-full grid-cols-[auto_1fr_auto] items-center transition-[max-width,padding] ${DOCK_MOTION} ${
-                scrolled ? 'max-w-none px-5' : `max-w-shell ${SHELL_PADDING}`
-              }`}
-            >
-              <a href="#top" className="relative z-10 shrink-0 justify-self-start" aria-label="Clapi — inicio">
-                <GlareHover
-                  glareColor="#ffffff"
-                  glareOpacity={0.6}
-                  glareAngle={-45}
-                  glareSize={220}
-                  transitionDuration={600}
-                  borderRadius="0px"
-                >
-                  <img
-                    src={logoDark}
-                    alt="Clapi"
-                    className={`w-auto transition-[height] ${DOCK_MOTION} ${scrolled ? 'h-7' : 'h-8'}`}
-                  />
-                </GlareHover>
-              </a>
+        <div className={`mx-auto grid h-full w-full max-w-shell grid-cols-[auto_1fr] items-center ${SHELL_PADDING}`}>
+          {/* Logo + secciones agrupados a la izquierda, en vez de logo | nav
+              centrado | CTA: la nav ya no necesita el centro del viewport
+              para leerse, y así queda todo el peso de marca y navegación del
+              mismo lado. */}
+          <div className="flex items-center gap-8 justify-self-start">
+            <a href="/" className="relative z-10 shrink-0" aria-label="Clapi — inicio">
+              <GlareHover
+                glareColor="#ffffff"
+                glareOpacity={0.6}
+                glareAngle={-45}
+                glareSize={220}
+                transitionDuration={600}
+                borderRadius="0px"
+              >
+                <img src={logoDark} alt="Clapi" className="h-8 w-auto" />
+              </GlareHover>
+            </a>
 
-              {/* `initialActiveIndex={-1}`: sin píldora al cargar. GooeyNav
-                  la exige para posicionar el efecto, pero arrancar con
-                  "Servicios" marcado sugeriría que estás en esa sección. El
-                  componente ya tolera un índice fuera de rango. */}
-              <div className="clapi-gooey-nav relative hidden justify-self-center lg:block">
-                <GooeyNav
-                  items={LINKS.map((link) => ({ label: link.label, href: link.href }))}
-                  particleCount={15}
-                  particleDistances={[90, 10]}
-                  particleR={100}
-                  initialActiveIndex={-1}
-                  animationTime={600}
-                  timeVariance={300}
-                  colors={[1, 2, 3, 1, 2, 3, 1, 4]}
-                />
-              </div>
-
-              <div className="relative z-10 flex items-center gap-3 justify-self-end">
-                <div className="hidden sm:block">
-                  <Button href="#contacto" className="!px-5 !py-2.5 !text-sm">
-                    Conversemos →
-                  </Button>
-                </div>
-
-                <button
-                  type="button"
-                  className="flex h-10 w-10 items-center justify-center rounded-full lg:hidden"
-                  aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
-                  aria-expanded={menuOpen}
-                  onClick={() => setMenuOpen((v) => !v)}
-                >
-                  <BurgerIcon open={menuOpen} />
-                </button>
-              </div>
+            {/* `initialActiveIndex={-1}`: sin píldora al cargar. GooeyNav la
+                exige para posicionar el efecto, pero arrancar con "Servicios"
+                marcado sugeriría que estás en esa sección. El componente ya
+                tolera un índice fuera de rango. */}
+            <div className="clapi-gooey-nav relative hidden lg:block">
+              <GooeyNav
+                items={LINKS.map((link) => ({ label: link.label, href: link.href }))}
+                particleCount={15}
+                particleDistances={[90, 10]}
+                particleR={100}
+                initialActiveIndex={-1}
+                cleared={onHome}
+                animationTime={600}
+                timeVariance={300}
+                colors={[1, 2, 3, 1, 2, 3, 1, 4]}
+              />
             </div>
-          </GlassSurface>
-        </div>
-      </div>
+          </div>
 
-      <AnimatePresence>
-        {menuOpen && (
-          <>
-            <motion.div
-              className="fixed inset-0 z-40 bg-ink/40 lg:hidden"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.25 }}
-              onClick={() => setMenuOpen(false)}
-            />
-            <motion.aside
-              className="fixed inset-y-0 right-0 z-50 flex w-[82%] max-w-sm flex-col gap-8 bg-white px-8 py-8 shadow-2xl lg:hidden"
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              transition={{ duration: 0.35, ease: 'easeOut' }}
+          {/* Por debajo de lg el botón de menú lo aporta StaggeredMenu
+              (abajo), que se posiciona por su cuenta sobre esta barra. */}
+          <div className="relative z-10 hidden items-center gap-3 justify-self-end sm:flex">
+            {/* Mismo GlareHover que el logo, mismos valores, solo el color
+                cambia a amarillo de marca — pedido tal cual para el CTA. Se
+                fija el morado en el propio hover de Button (que por defecto
+                pinta de amarillo sólido): un brillo amarillo sobre un fondo
+                ya amarillo no tiene contraste y el barrido no se alcanza a
+                ver, así que el morado fijo es el lienzo que lo hace visible. */}
+            <GlareHover
+              glareColor="#F5F102"
+              glareOpacity={0.6}
+              glareAngle={-45}
+              glareSize={220}
+              transitionDuration={600}
+              borderRadius="50px"
             >
-              <div className="flex items-center justify-between">
-                <img src={logoDark} alt="Clapi" className="h-6 w-auto" />
-                <button
-                  type="button"
-                  aria-label="Cerrar menú"
-                  className="flex h-10 w-10 items-center justify-center rounded-full"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  <BurgerIcon open />
-                </button>
-              </div>
-
-              <nav className="flex flex-col gap-6" aria-label="Navegación móvil">
-                {LINKS.map((link) => (
-                  <a
-                    key={link.href}
-                    href={link.href}
-                    className="text-xl font-semibold text-ink"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    {link.label}
-                  </a>
-                ))}
-              </nav>
-
-              <Button href="#contacto" className="mt-auto justify-center" onClick={() => setMenuOpen(false)}>
-                Conversemos →
+              <Button
+                as="button"
+                type="button"
+                onClick={openChat}
+                className="!px-5 !py-2.5 !text-sm hover:!bg-brand hover:!text-white"
+              >
+                Hablemos →
               </Button>
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
-    </header>
-  );
-}
+            </GlareHover>
+          </div>
+        </div>
+      </GlassSurface>
 
-function BurgerIcon({ open }) {
-  return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <motion.line
-        x1="2" y1="6" x2="18" y2="6" stroke="#0D0B14" strokeWidth="1.6" strokeLinecap="round"
-        animate={{ rotate: open ? 45 : 0, y: open ? 4 : 0 }}
-        style={{ transformOrigin: '10px 6px' }}
-      />
-      <motion.line
-        x1="2" y1="14" x2="18" y2="14" stroke="#0D0B14" strokeWidth="1.6" strokeLinecap="round"
-        animate={{ rotate: open ? -45 : 0, y: open ? -4 : 0 }}
-        style={{ transformOrigin: '10px 14px' }}
-      />
-    </svg>
+      {/*
+        Menú lateral solo en móvil. Sustituye al panel que había antes: aporta
+        su propio botón (se posiciona sobre la barra de cristal) y su propio
+        panel a pantalla completa, así que aquí solo se envuelve en `lg:hidden`
+        y se le pasa el mismo array de secciones que usa el nav de escritorio.
+      */}
+      <div className="lg:hidden">
+        <StaggeredMenu
+          position="right"
+          isFixed
+          items={MENU_ITEMS}
+          displaySocials={false}
+          displayItemNumbering
+          colors={['#EDE6FF', '#532CE1']}
+          accentColor="#532CE1"
+          menuButtonColor="#0D0B14"
+          openMenuButtonColor="#0D0B14"
+          changeMenuColorOnOpen={false}
+          logoUrl={logoDark}
+          onMenuOpen={() => setMenuOpen(true)}
+          onMenuClose={() => setMenuOpen(false)}
+        />
+      </div>
+    </header>
   );
 }

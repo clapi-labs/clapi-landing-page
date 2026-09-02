@@ -93,7 +93,11 @@ const LightPillar = ({
     }
 
     renderer.setSize(width, height);
-    renderer.setPixelRatio(renderScale ?? settings.pixelRatio);
+    // `renderScale` es un TECHO, no un valor absoluto. El preset ya baja el
+    // pixelRatio a 0.5 en móvil; si esto lo sustituyera sin más, un
+    // renderScale pensado para escritorio (0.7) subiría la resolución justo en
+    // el dispositivo más débil.
+    renderer.setPixelRatio(renderScale == null ? settings.pixelRatio : Math.min(renderScale, settings.pixelRatio));
     container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 

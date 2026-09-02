@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Clapi</title>
+    <!--
+      GitHub Pages es hosting estático: no sabe qué es "/servicios", solo
+      sirve archivos. Si alguien entra directo a esa URL (o recarga), GitHub
+      no encuentra el archivo y cae aquí — este script reescribe la ruta como
+      query string ("?/servicios") y redirige a index.html, que la decodifica
+      de vuelta antes de que monte React (ver el script en <head> de
+      index.html). Truco estándar para SPAs en GitHub Pages, sin backend.
+      pathSegmentsToKeep = 1 porque el sitio vive bajo /clapi-landing-page/,
+      no en la raíz del dominio.
+    -->
+    <script>
+      var pathSegmentsToKeep = 1;
+      var l = window.location;
+      l.replace(
+        l.protocol +
+          '//' +
+          l.hostname +
+          (l.port ? ':' + l.port : '') +
+          l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') +
+          '/?/' +
+          l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
+          (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+          l.hash
+      );
+    </script>
+  </head>
+  <body></body>
+</html>

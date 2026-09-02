@@ -32,122 +32,43 @@ body {
 }
 
 /*
- * GlassSurface escribe alto, radio y opacidad como estilos inline según el
- * estado de scroll; la clase base solo transiciona `opacity`, así que sin
- * esto el paso barra → dock sería un salto seco. Misma curva y duración que
- * las utilidades del Navbar para que todo el encogido viaje junto.
- */
-/* Misma duración y curva que DOCK_MOTION en Navbar.jsx — si cambia una, cambian
-   las dos, o el alto vuelve a desacompasarse del ancho. */
-.navbar-liquid-glass.glass-surface {
-  transition:
-    height 420ms cubic-bezier(0.22, 1, 0.36, 1),
-    border-radius 420ms cubic-bezier(0.22, 1, 0.36, 1),
-    background 420ms cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 420ms cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.26s ease-out;
-}
-
-/*
  * GlassSurface trae de serie un juego de sombras (exteriores e interiores)
  * que en una barra a todo el ancho dibujan una línea separando el navbar del
- * contenido. Arriba del todo la barra debe leerse plana, fundida con la
- * página; el relieve aparece solo cuando el scroll la convierte en dock.
- * Gana por especificidad (dos clases) sobre .glass-surface--svg/--fallback.
+ * contenido. La barra debe leerse plana, fundida con la página — sin relieve
+ * de tarjeta flotando encima.
  */
 .navbar-liquid-glass.glass-surface--flat {
   box-shadow: none;
 }
 
+/* El fallback de GlassSurface (el que se usa en móvil y en Safari/Firefox)
+   trae un borde blanco de 1px que vuelve a dibujar la línea que separa el
+   navbar del contenido — justo lo que se quería evitar. */
+.navbar-liquid-glass.glass-surface--fallback {
+  border: none;
+}
+
 /*
- * ── GooeyNav en tema claro ────────────────────────────────────────────────
- *
- * El componente viene calibrado para fondo OSCURO y OPACO: píldora y
- * partículas blancas sobre un `::before` negro, fundidas con
- * `mix-blend-mode: lighten`. Ese truco (blur + contrast(100)) necesita
- * píxeles opacos debajo para que el contraste separe las gotas, y necesita
- * que el blend tenga contra qué resolverse.
- *
- * Aquí no se cumple ninguna de las dos: el navbar es un cristal TRANSLÚCIDO,
- * así que dentro de su contexto de apilamiento el backdrop es casi
- * transparente y el rectángulo del `::before` se pinta tal cual — un
- * cuadrado sólido flotando junto al menú.
- *
- * La solución no es recolorear sino cambiar de técnica: un filtro SVG que
- * opera sobre el CANAL ALFA (feGaussianBlur + feColorMatrix amplificando
- * alfa) produce las mismas metabolas pero con transparencia real, sin
- * backdrop y sin blend. Ver el <svg> oculto en Navbar.jsx.
+ * SpecularButton: el botón es solo filo, sin relleno. Se le quita la sombra
+ * que trae de serie (0 8px 24px negra al 25%, pensada para fondo oscuro)
+ * porque un botón fantasma con sombra proyectada se lee como una tarjeta
+ * flotando, no como un contorno. El tamaño de texto se iguala al de Button.
  */
-.clapi-gooey-nav .gooey-nav-container .effect.filter {
-  filter: url(#clapi-goo);
-  mix-blend-mode: normal;
-}
-
-.clapi-gooey-nav .gooey-nav-container .effect.filter::before {
-  display: none;
-}
-
-.clapi-gooey-nav .gooey-nav-container nav ul {
-  gap: 1.4em;
-  padding: 0;
+.clapi-specular-cta.specular-button {
   font-size: 0.875rem;
-  font-weight: 500;
-  color: rgb(13 11 20 / 0.8);
-  text-shadow: none;
+  font-weight: 600;
+  padding: 15px 32px;
+  box-shadow: none;
+  transition:
+    color 0.25s ease,
+    transform 0.15s ease;
 }
 
-.clapi-gooey-nav .gooey-nav-container nav ul li {
-  color: rgb(13 11 20 / 0.8);
-  white-space: nowrap;
-}
-
-/* Hover en negro (el del logo), no en morado. */
-.clapi-gooey-nav .gooey-nav-container nav ul li:hover {
-  color: #0d0b14;
-}
-
-.clapi-gooey-nav .gooey-nav-container nav ul li a {
-  padding: 0.5em 0.9em;
-}
-
-/* Píldora oscura en vez de blanca, con el texto invertido encima. */
-.clapi-gooey-nav .gooey-nav-container nav ul li::after {
-  background: #0d0b14;
-}
-
-/*
- * `!important` a conciencia: GooeyNav.css fija el color del item activo en su
- * propio tema (negro sobre píldora blanca) y aquí se invierte el par entero.
- * Sin esto el texto activo se queda oscuro sobre la píldora oscura, ilegible.
- */
-.clapi-gooey-nav .gooey-nav-container nav ul li.active,
-.clapi-gooey-nav .gooey-nav-container nav ul li.active a,
-.clapi-gooey-nav .gooey-nav-container nav ul li.active:hover {
-  color: #ffffff !important;
-}
-
-.clapi-gooey-nav .gooey-nav-container .effect.text {
-  color: #0d0b14;
-}
-
-.clapi-gooey-nav .gooey-nav-container .effect.text.active {
-  color: #ffffff;
-}
-
-.clapi-gooey-nav .gooey-nav-container .effect.filter::after {
-  background: #0d0b14;
-}
-
-/*
- * Las cuatro ranuras de color van al mismo negro a propósito: `contrast(100)`
- * satura cualquier tinte a un primario puro (el morado de marca saldría azul
- * eléctrico), así que un solo color es lo único que se mantiene limpio.
- */
-.clapi-gooey-nav {
-  --color-1: #0d0b14;
-  --color-2: #0d0b14;
-  --color-3: #0d0b14;
-  --color-4: #0d0b14;
+/* El texto ya nace morado (`textColor` en Hero.jsx); el hover lo lleva al
+   morado oscuro de marca para que la interacción se note sin cambiar de
+   familia de color. */
+.clapi-specular-cta.specular-button:hover {
+  color: #3d1fa8;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,12 +1,12 @@
+import { Link } from 'react-router-dom';
 import Container from './Container.jsx';
 import logoLight from '../assets/logotipo-light.png';
 
 const NAV_LINKS = [
-  { href: '#servicios', label: 'Servicios' },
-  { href: '#casos', label: 'Casos de éxito' },
-  { href: '#nosotros', label: 'Nosotros' },
-  { href: '#', label: 'Recursos' },
-  { href: '#contacto', label: 'Contacto' },
+  { to: '/servicios', label: 'Servicios' },
+  { to: '/proyectos', label: 'Proyectos' },
+  { to: '/precios', label: 'Precios' },
+  { to: '/nosotros', label: 'Nosotros' },
 ];
 
 const CONTACT_LINKS = [
@@ -21,7 +21,9 @@ export default function Footer() {
     <footer className="bg-ink text-white/70">
       <Container className="grid gap-12 py-16 sm:grid-cols-3 md:py-20">
         <div>
-          <img src={logoLight} alt="Clapi" className="h-6 w-auto" />
+          <Link to="/" aria-label="Clapi — inicio">
+            <img src={logoLight} alt="Clapi" className="h-6 w-auto" />
+          </Link>
           <p className="mt-5 max-w-xs text-sm leading-relaxed">
             Automatizamos lo repetitivo para que te enfoques en lo que importa.
           </p>
@@ -32,9 +34,9 @@ export default function Footer() {
           <ul className="mt-5 flex flex-col gap-3">
             {NAV_LINKS.map((link) => (
               <li key={link.label}>
-                <a href={link.href} className="text-sm transition-colors hover:text-white">
+                <Link to={link.to} className="text-sm transition-colors hover:text-white">
                   {link.label}
-                </a>
+                </Link>
               </li>
             ))}
           </ul>

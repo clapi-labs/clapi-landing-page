@@ -146,6 +146,16 @@ const GlassSurface = ({
       return false;
     }
 
+    // En táctil se usa el fallback aunque el navegador soporte el filtro SVG.
+    // La versión buena encadena 9 primitivas en un `backdrop-filter` que se
+    // recalcula en cada frame porque el fondo detrás está animado: en un móvil
+    // eso es de lo más caro de toda la página, y la refracción apenas se
+    // aprecia a ese tamaño de pantalla. El fallback sigue siendo cristal
+    // (blur + saturate), solo que sin deformar el fondo.
+    if (window.matchMedia('(pointer: coarse)').matches) {
+      return false;
+    }
+
     const div = document.createElement('div');
     div.style.backdropFilter = `url(#${filterId})`;
 

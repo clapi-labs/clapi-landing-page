@@ -9,6 +9,7 @@
 const VARIANTS = {
   primary: 'bg-brand text-white hover:bg-accent hover:text-ink',
   onDark: 'bg-accent text-ink hover:bg-white',
+  outline: 'border-2 border-brand bg-transparent text-brand hover:bg-brand hover:text-white',
 };
 
 export default function Button({

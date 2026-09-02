@@ -43,7 +43,7 @@ function brandMaterial(color) {
     roughness: 0.34,
     metalness: 0,
     clearcoat: 1,
-    clearcoatRoughness: 0.26,
+    clearcoatRoughness: 0.15,
     envMapIntensity: 1.25,
     sheen: 0.6,
     sheenRoughness: 0.55,

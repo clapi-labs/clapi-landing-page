@@ -9,7 +9,11 @@ const GooeyNav = ({
   particleR = 100,
   timeVariance = 300,
   colors = [1, 2, 3, 1, 2, 3, 1, 4],
-  initialActiveIndex = 0
+  initialActiveIndex = 0,
+  // Permite desmarcar desde fuera. En una landing de una sola página el item
+  // activo no representa "dónde estás" una vez vuelves arriba del todo, así
+  // que quedarse marcado es información falsa.
+  cleared = false
 }) => {
   const containerRef = useRef(null);
   const navRef = useRef(null);
@@ -128,11 +132,30 @@ const GooeyNav = ({
   };
 
   useEffect(() => {
+    if (cleared) setActiveIndex(-1);
+  }, [cleared]);
+
+  useEffect(() => {
     if (!navRef.current || !containerRef.current) return;
     const activeLi = navRef.current.querySelectorAll('li')[activeIndex];
     if (activeLi) {
       updateEffectPosition(activeLi);
       textRef.current?.classList.add('active');
+    } else {
+      // Sin item activo hay que retirar tambien las capas de efecto: la
+      // píldora y el texto duplicado viven en elementos aparte, posicionados
+      // sobre el último item marcado, y sin esto se quedarían flotando ahí
+      // aunque el <li> ya no tenga la clase.
+      if (textRef.current) {
+        textRef.current.classList.remove('active');
+        textRef.current.innerText = '';
+        Object.assign(textRef.current.style, { width: '0px', height: '0px' });
+      }
+      if (filterRef.current) {
+        filterRef.current.classList.remove('active');
+        filterRef.current.querySelectorAll('.particle').forEach(p => p.remove());
+        Object.assign(filterRef.current.style, { width: '0px', height: '0px' });
+      }
     }
 
     const resizeObserver = new ResizeObserver(() => {

@@ -19,6 +19,12 @@
   content: '';
   position: absolute;
   inset: 0;
+  /* Explícito y no `auto`: si el contenido envuelto tiene su propio efecto de
+     hover con `transform` (p. ej. un botón que se levanta), ese transform
+     crea su propio contexto de apilamiento y, sin esto, pintaría por encima
+     del brillo justo en el momento en que debería verse — quedando oculto
+     exactamente durante el hover. */
+  z-index: 1;
   background: linear-gradient(
     var(--gh-angle),
     hsla(0, 0%, 0%, 0) 60%,

@@ -1,34 +1,29 @@
+import { Link } from 'react-router-dom';
 import Container from '../components/Container.jsx';
 import SectionReveal from '../components/SectionReveal.jsx';
+import Button from '../components/Button.jsx';
 import { FlowIcon, BotIcon, LinkIcon, ClockReportIcon } from '../components/icons.jsx';
 
 const SERVICES = [
   {
     Icon: FlowIcon,
-    title: 'Automatización de flujos internos',
-    text: 'Conectamos tus herramientas para que la información fluya sola entre sistemas.',
-    example:
-      'Un formulario se llena → se crea el registro en tu CRM → se notifica al equipo por Slack.',
+    title: 'Flujos automatizados',
+    text: 'Conectamos tus herramientas para que la información fluya sola.',
   },
   {
     Icon: BotIcon,
     title: 'Bots y asistentes con IA',
-    text: 'Asistentes inteligentes que responden, clasifican y ejecutan tareas sin intervención humana.',
-    example:
-      'Tu cliente escribe por WhatsApp → el bot responde, toma el pedido y lo registra automáticamente.',
+    text: 'Asistentes que responden, clasifican y ejecutan sin intervención.',
   },
   {
     Icon: LinkIcon,
-    title: 'Integración entre herramientas',
-    text: 'Hacemos que tus herramientas actuales hablen entre sí, sin cambiar lo que ya funciona.',
-    example: 'Una venta en tu POS → actualiza inventario → genera factura → envía confirmación al cliente.',
+    title: 'Integraciones',
+    text: 'Tus herramientas actuales trabajando juntas, sin cambiar nada.',
   },
   {
     Icon: ClockReportIcon,
-    title: 'Automatización de reportes y datos',
-    text: 'Reportes que se generan solos, datos que se organizan sin que nadie los toque.',
-    example:
-      'Cada lunes a las 8am → tu reporte de ventas semanal llega a tu correo, listo para revisar.',
+    title: 'Reportes automáticos',
+    text: 'Datos organizados y reportes listos sin que nadie los toque.',
   },
 ];
 
@@ -46,8 +41,8 @@ export default function Services() {
           </p>
         </SectionReveal>
 
-        <div className="mt-16 grid gap-6 sm:grid-cols-2">
-          {SERVICES.map(({ Icon, title, text, example }, i) => (
+        <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {SERVICES.map(({ Icon, title, text }, i) => (
             <SectionReveal
               key={title}
               delay={i * 0.08}
@@ -58,10 +53,15 @@ export default function Services() {
               </span>
               <h3 className="text-xl font-semibold text-ink">{title}</h3>
               <p className="leading-relaxed text-ink/80">{text}</p>
-              <p className="mt-1 text-sm leading-relaxed text-ink/50">{example}</p>
             </SectionReveal>
           ))}
         </div>
+
+        <SectionReveal delay={0.3} className="mt-14 flex justify-center">
+          <Button as={Link} to="/servicios" variant="outline">
+            Conoce todos nuestros servicios →
+          </Button>
+        </SectionReveal>
       </Container>
     </section>
   );

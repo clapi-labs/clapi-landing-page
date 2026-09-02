@@ -1,34 +1,42 @@
 import Container from '../components/Container.jsx';
 import SectionReveal from '../components/SectionReveal.jsx';
-import { ClipboardIcon, MailIcon, ChartIcon, ChatIcon } from '../components/icons.jsx';
+import {
+  MailIcon,
+  ClipboardIcon,
+  ChartIcon,
+  ChatIcon,
+  ReceiptIcon,
+  BoxIcon,
+} from '../components/icons.jsx';
 
-const PAINS = [
-  { Icon: ClipboardIcon, text: 'Copiar datos manualmente entre sistemas' },
-  { Icon: MailIcon, text: 'Enviar correos repetitivos uno por uno' },
-  { Icon: ChartIcon, text: 'Actualizar reportes y hojas de cálculo a mano' },
-  { Icon: ChatIcon, text: 'Responder las mismas preguntas todos los días' },
+const EXAMPLES = [
+  { Icon: MailIcon, text: 'Enviar correos de seguimiento a clientes' },
+  { Icon: ClipboardIcon, text: 'Pasar datos de un sistema a otro' },
+  { Icon: ChartIcon, text: 'Generar reportes semanales o mensuales' },
+  { Icon: ChatIcon, text: 'Responder preguntas frecuentes por WhatsApp' },
+  { Icon: ReceiptIcon, text: 'Crear facturas y enviarlas automáticamente' },
+  { Icon: BoxIcon, text: 'Actualizar inventario cuando se hace una venta' },
 ];
 
 export default function Problem() {
   return (
     <section className="py-20 md:py-32">
       <Container>
-        <SectionReveal className="mx-auto max-w-3xl text-center">
+        <SectionReveal className="mx-auto max-w-2xl text-center">
           <h2 className="text-4xl font-semibold leading-tight text-ink sm:text-[44px]">
-            ¿Cuántas horas a la semana pierdes haciendo lo mismo?
+            Más de lo que crees
           </h2>
           <p className="mx-auto mt-6 max-w-prose text-lg leading-relaxed text-ink/80">
-            Copiar datos entre sistemas. Enviar los mismos correos. Actualizar hojas de
-            cálculo. Responder lo mismo una y otra vez. Si algo en tu negocio se repite —
-            se puede automatizar.
+            Si en tu negocio algo se hace igual todos los días, con los mismos pasos y las
+            mismas reglas — se puede automatizar.
           </p>
         </SectionReveal>
 
-        <div className="mt-16 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {PAINS.map(({ Icon, text }, i) => (
+        <div className="mt-16 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {EXAMPLES.map(({ Icon, text }, i) => (
             <SectionReveal
               key={text}
-              delay={i * 0.08}
+              delay={i * 0.06}
               className="flex flex-col gap-4 rounded-card border border-lilac bg-mist p-6"
             >
               <Icon className="h-7 w-7 text-brand" />
@@ -36,6 +44,10 @@ export default function Problem() {
             </SectionReveal>
           ))}
         </div>
+
+        <SectionReveal delay={0.2} className="mx-auto mt-10 max-w-prose text-center text-base text-ink/60">
+          Estos son solo algunos ejemplos. Si se repite, probablemente se puede automatizar.
+        </SectionReveal>
       </Container>
     </section>
   );

@@ -1,0 +1,54 @@
+/*
+ * Banda de logos en loop continuo. La pista se duplica en el JSX y se
+ * desplaza exactamente -50%: al llegar ahí, la segunda copia está justo
+ * donde arrancó la primera, así que el reinicio del keyframe es invisible y
+ * el loop se ve infinito sin JS ni cálculo de anchos.
+ */
+.tools-carousel {
+  position: relative;
+  overflow: hidden;
+  max-width: 100%;
+  /* Difumina los extremos para que los logos entren y salgan en vez de
+     cortarse contra un borde duro. */
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 8%,
+    #000 92%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(to right, transparent 0, #000 8%, #000 92%, transparent 100%);
+}
+
+.tools-carousel__track {
+  display: flex;
+  width: max-content;
+  animation: tools-carousel-scroll var(--tc-duration, 36s) linear infinite;
+}
+
+.tools-carousel__group {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: var(--tc-gap, 4rem);
+  padding-right: var(--tc-gap, 4rem);
+}
+
+@keyframes tools-carousel-scroll {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+/* Puramente decorativo: si el usuario pide menos movimiento, la banda se
+   queda quieta en vez de desaparecer — los logos siguen siendo el contenido. */
+@media (prefers-reduced-motion: reduce) {
+  .tools-carousel__track {
+    animation: none;
+    /* Sin animación la pista duplicada sobra visualmente, pero dejarla no
+       molesta: la máscara recorta lo que sale del contenedor. */
+  }
+}

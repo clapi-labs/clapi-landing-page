@@ -1,4 +1,25 @@
+import { useEffect, useState } from 'react';
 import LightPillar from './LightPillar.jsx';
+
+/**
+ * En formato retrato el haz cae en buena parte fuera del encuadre y el fondo
+ * se queda casi blanco. `glowAmount` es un uniform con su propio efecto en
+ * LightPillar, así que subirlo NO recrea el contexto WebGL: solo abre el
+ * brillo para que la luz siga leyéndose en pantallas estrechas.
+ */
+function useIsNarrow() {
+  const [narrow, setNarrow] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const sync = () => setNarrow(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
+
+  return narrow;
+}
 
 /**
  * Fondo único para todo el sitio, no por sección.
@@ -21,6 +42,8 @@ import LightPillar from './LightPillar.jsx';
  *    `screen` empuja todo a blanco y el haz desaparece por completo.
  */
 export default function SiteBackground() {
+  const narrow = useIsNarrow();
+
   return (
     <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden="true">
       <LightPillar
@@ -28,7 +51,7 @@ export default function SiteBackground() {
         bottomColor="#F5F102"
         intensity={1}
         rotationSpeed={0.3}
-        glowAmount={0.002}
+        glowAmount={narrow ? 0.0055 : 0.002}
         pillarWidth={3}
         pillarHeight={0.4}
         noiseIntensity={0.5}
@@ -43,7 +66,14 @@ export default function SiteBackground() {
       {/* Velo superior: baja el color justo en la franja del navbar, para que
           el cristal no tenga que desenfocar color saturado — que es cuando se
           ve sucio y distorsionado. */}
-      <div className="absolute inset-x-0 top-0 h-[26vh] bg-gradient-to-b from-canvas via-canvas/60 to-transparent" />
+      {/* Más corto en móvil: a 26vh de una pantalla en retrato el velo se come
+          justo la franja donde está el titular y el fondo se ve blanco. */}
+      <div className="absolute inset-x-0 top-0 h-[15vh] bg-gradient-to-b from-canvas via-canvas/60 to-transparent sm:h-[26vh]" />
+
+      {/* Lavado extra solo en móvil: en retrato el haz ocupa proporcionalmente
+          más pantalla que en desktop/tablet, así que se le resta un poco de
+          presencia con blanco de fondo — sutil a propósito, no toca sm+. */}
+      <div className="absolute inset-0 bg-canvas/15 sm:hidden" />
     </div>
   );
 }

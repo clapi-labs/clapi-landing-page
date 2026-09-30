@@ -1,0 +1,35 @@
+name: Deploy to GitHub Pages
+
+# Publica la página "Próximamente" mientras el sitio real se sigue
+# construyendo en la rama landing-v1 (esa rama ya no despliega
+# automáticamente, ver su propio workflow). Cuando el sitio real esté listo
+# para publicarse, se mergea a main y este workflow puede evolucionar para
+# hacer build de la app en vez de servir el HTML estático.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4

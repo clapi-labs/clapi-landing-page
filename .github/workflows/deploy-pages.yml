@@ -1,11 +1,13 @@
 name: Deploy to GitHub Pages
 
-# Deploy directo desde landing-v1 mientras el trabajo sigue en curso, sin
-# esperar a mergear a main — es el despliegue "de mientras" que se pidió.
-# Cuando el branch se mergee a main, cambiar esto a `main` (o añadirlo).
+# El link público ahora lo publica la rama main (página "Próximamente"),
+# así que aquí quitamos el push automático: landing-v1 sigue siendo la rama
+# de trabajo del sitio real, y no queremos que cada commit en curso
+# sobreescriba lo que ya está publicado. Para ver un build de este branch
+# en GitHub Pages, lanzar este workflow manualmente (workflow_dispatch).
+# Cuando el sitio real esté listo, mergear a main y restaurar el trigger de
+# push aquí (o moverlo a main con el build completo).
 on:
-  push:
-    branches: [landing-v1]
   workflow_dispatch:
 
 permissions:

@@ -7,7 +7,7 @@ import { useChat } from '../context/ChatContext.jsx';
 const WEBHOOK_URL = import.meta.env.VITE_CHAT_WEBHOOK_URL || '';
 
 const STEPS = [
-  { key: 'intro', bot: '¡Hola! 👋 Soy el asistente de Clapi. Voy a hacerte unas preguntas rápidas para que nuestro equipo pueda ayudarte mejor.' },
+  { key: 'intro', bot: '¡Hola! 👋 Soy el asistente de CLAPI. Voy a hacerte unas preguntas rápidas para que nuestro equipo pueda ayudarte mejor.' },
   { key: 'nombre', bot: '¿Cómo te llamas?', input: 'text', placeholder: 'Tu nombre' },
   {
     key: 'perfil',
@@ -42,7 +42,7 @@ const STEPS = [
     input: 'text',
     placeholder: 'WhatsApp o correo',
   },
-  { key: 'final', bot: '¡Listo! 🎉 Nuestro equipo te contactará pronto. Gracias por confiar en Clapi.' },
+  { key: 'final', bot: '¡Listo! 🎉 Nuestro equipo te contactará pronto. Gracias por confiar en CLAPI.' },
 ];
 
 function initialState() {
@@ -69,7 +69,7 @@ function buildPayload(answers, origen) {
 
 async function submitLead(payload) {
   if (!WEBHOOK_URL) {
-    console.info('[Clapi] Lead capturado (sin webhook configurado):', payload);
+    console.info('[CLAPI] Lead capturado (sin webhook configurado):', payload);
     return;
   }
   try {
@@ -79,7 +79,7 @@ async function submitLead(payload) {
       body: JSON.stringify(payload),
     });
   } catch {
-    console.error('[Clapi] No se pudo enviar el lead al webhook.');
+    console.error('[CLAPI] No se pudo enviar el lead al webhook.');
   }
 }
 
@@ -201,10 +201,10 @@ export default function ChatPanel() {
             className="fixed inset-y-0 right-0 z-[61] flex w-full max-w-md flex-col bg-white shadow-[-24px_0_60px_rgba(13,11,20,0.18)]"
             role="dialog"
             aria-modal="true"
-            aria-label="Chat con el asistente de Clapi"
+            aria-label="Chat con el asistente de CLAPI"
           >
             <div className="flex items-center justify-between border-b border-lilac px-6 py-5">
-              <p className="text-lg font-semibold text-ink">Asistente Clapi</p>
+              <p className="text-lg font-semibold text-ink">Asistente CLAPI</p>
               <button
                 type="button"
                 onClick={closeChat}

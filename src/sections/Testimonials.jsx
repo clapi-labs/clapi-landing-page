@@ -2,42 +2,12 @@ import { useRef } from 'react';
 import Container from '../components/Container.jsx';
 import SectionReveal from '../components/SectionReveal.jsx';
 
-// Placeholder — reemplazar por testimonios reales de clientes.
+// role y company son opcionales: la línea bajo el nombre solo se muestra si hay datos.
 const TESTIMONIALS = [
   {
-    name: 'Camila Rojas',
-    role: 'Operaciones',
-    company: 'Nimbus',
+    name: 'Alvaro Burbano',
     quote:
-      'Automatizaron algo que nos quitaba medio día cada semana. Ahora corre solo y nadie lo piensa dos veces.',
-  },
-  {
-    name: 'Diego Salazar',
-    role: 'Fundador',
-    company: 'Orbital',
-    quote:
-      'Entendieron el proceso mejor que nosotros mismos. Lo que entregaron funcionó desde el primer día.',
-  },
-  {
-    name: 'Valentina Ibarra',
-    role: 'Atención al cliente',
-    company: 'Vertex',
-    quote:
-      'El bot de WhatsApp responde el 80% de las consultas solo. El equipo por fin respira.',
-  },
-  {
-    name: 'Mateo Herrera',
-    role: 'Finanzas',
-    company: 'Atlas',
-    quote:
-      'Los reportes que armábamos a mano ahora llegan solos cada lunes. Sin errores, sin excusas.',
-  },
-  {
-    name: 'Sofía Larraín',
-    role: 'Directora comercial',
-    company: 'Forma',
-    quote:
-      'Nada de plantillas genéricas: la solución calzó exacto con cómo trabajamos nosotros.',
+      'Antes tenía que hacerlo todo a mano y se me iban horas en cada tarea. Ahora simplemente le digo a mi asistente lo que necesito y él se encarga del resto, a la perfección.',
   },
 ];
 
@@ -58,6 +28,33 @@ export default function Testimonials() {
     const card = track.querySelector('[data-card]');
     const width = card ? card.getBoundingClientRect().width + 24 : 320;
     track.scrollBy({ left: dir * width, behavior: 'smooth' });
+  }
+
+  // Con un solo testimonio el carrusel no aporta (flechas sin destino), así
+  // que se muestra como cita destacada centrada.
+  if (TESTIMONIALS.length === 1) {
+    const [t] = TESTIMONIALS;
+    return (
+      <section id="casos" className="py-20 md:py-32">
+        <Container>
+          <SectionReveal className="text-center">
+            <h2 className="text-4xl font-semibold leading-tight text-ink sm:text-[44px]">
+              Lo que dicen quienes ya trabajan con nosotros
+            </h2>
+          </SectionReveal>
+
+          <SectionReveal delay={0.1}>
+            <article className="relative mx-auto mt-12 flex max-w-3xl flex-col items-center gap-8 rounded-card bg-white px-8 py-12 text-center shadow-card md:px-14 md:py-14">
+              <span aria-hidden="true" className="font-serif text-7xl leading-none text-brand/20">
+                &ldquo;
+              </span>
+              <p className="-mt-6 text-xl leading-relaxed text-ink/80 md:text-2xl">{t.quote}</p>
+              <TestimonialAuthor t={t} />
+            </article>
+          </SectionReveal>
+        </Container>
+      </section>
+    );
   }
 
   return (
@@ -85,16 +82,8 @@ export default function Testimonials() {
                 className="flex w-[85%] shrink-0 snap-start flex-col gap-5 rounded-card bg-white p-8 shadow-card sm:w-[calc((100%-3rem)/2)] lg:w-[calc((100%-3rem)/3)]"
               >
                 <p className="leading-relaxed text-ink/80">&ldquo;{t.quote}&rdquo;</p>
-                <div className="mt-auto flex items-center gap-3">
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-lilac text-sm font-semibold text-brand">
-                    {initials(t.name)}
-                  </span>
-                  <div>
-                    <p className="text-sm font-semibold text-ink">{t.name}</p>
-                    <p className="text-sm text-ink/60">
-                      {t.role} · {t.company}
-                    </p>
-                  </div>
+                <div className="mt-auto">
+                  <TestimonialAuthor t={t} />
                 </div>
               </article>
             ))}
@@ -102,6 +91,21 @@ export default function Testimonials() {
         </SectionReveal>
       </Container>
     </section>
+  );
+}
+
+function TestimonialAuthor({ t }) {
+  const meta = [t.role, t.company].filter(Boolean).join(' · ');
+  return (
+    <div className="flex items-center gap-3 text-left">
+      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-lilac text-sm font-semibold text-brand">
+        {initials(t.name)}
+      </span>
+      <div>
+        <p className="text-sm font-semibold text-ink">{t.name}</p>
+        {meta && <p className="text-sm text-ink/60">{meta}</p>}
+      </div>
+    </div>
   );
 }
 

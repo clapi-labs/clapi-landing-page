@@ -21,7 +21,7 @@ function initials(name) {
 
 export default function Nosotros() {
   usePageMeta(
-    'Nosotros — Clapi',
+    'CLAPI — Nosotros',
     'Un equipo de desarrolladores que cree que la tecnología debe simplificar, no complicar.'
   );
 
@@ -36,7 +36,7 @@ export default function Nosotros() {
         <Container>
           <SectionReveal className="mx-auto max-w-[700px] space-y-6 text-center text-lg leading-relaxed text-ink/80">
             <p>
-              Clapi nació de una idea simple: hay demasiados negocios perdiendo tiempo en tareas que
+              CLAPI nació de una idea simple: hay demasiados negocios perdiendo tiempo en tareas que
               una máquina puede hacer mejor, más rápido y sin errores.
             </p>
             <p>

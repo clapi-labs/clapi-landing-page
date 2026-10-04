@@ -3,42 +3,36 @@ import SectionReveal from '../components/SectionReveal.jsx';
 import PageHeader from '../components/PageHeader.jsx';
 import PageCTA from '../components/PageCTA.jsx';
 import usePageMeta from '../hooks/usePageMeta.js';
-import { FlowIcon, BotIcon, LinkIcon, ClockReportIcon } from '../components/icons.jsx';
+import { ReceiptIcon, BoxIcon, CalendarIcon, RocketIcon } from '../components/icons.jsx';
 
 const SERVICES = [
   {
-    Icon: FlowIcon,
-    title: 'Automatización de flujos internos',
-    text: 'Conectamos tus herramientas para que la información fluya entre sistemas sin que nadie la mueva manualmente.',
+    Icon: ReceiptIcon,
+    title: 'Sistema de toma de pedidos por WhatsApp para restaurantes',
+    text: 'Tus clientes piden por WhatsApp y el sistema toma el pedido completo: menú, cantidades, dirección y forma de pago. Sin errores de transcripción y sin perder mensajes en hora pico.',
     example:
-      'Un formulario se llena → se crea el registro en tu CRM → se notifica al equipo por Slack → se agenda el seguimiento. Todo automático.',
+      'El cliente escribe por WhatsApp → recibe el menú → arma su pedido → el pedido llega confirmado a la cocina. Todo automático.',
   },
   {
-    Icon: BotIcon,
-    title: 'Bots y asistentes con IA',
-    text: 'Asistentes inteligentes que responden, clasifican y ejecutan tareas sin intervención humana. Disponibles 24/7.',
+    Icon: BoxIcon,
+    title: 'Sistema de toma de pedidos por WhatsApp para minimarkets',
+    text: 'Tu tienda recibe pedidos por WhatsApp a cualquier hora. El sistema registra los productos, confirma disponibilidad y deja el pedido listo para alistar y despachar.',
     example:
-      'Tu cliente escribe por WhatsApp → el bot responde, toma el pedido y lo registra automáticamente en tu sistema.',
+      'El cliente envía su lista por WhatsApp → se confirman productos y total → el pedido queda registrado para alistar.',
   },
   {
-    Icon: LinkIcon,
-    title: 'Integración entre herramientas',
-    text: 'Hacemos que tus herramientas actuales hablen entre sí. Sin cambiar lo que ya funciona, sin migrar nada.',
+    Icon: CalendarIcon,
+    title: 'Sistema de agendamiento automático de domiciliarios por WhatsApp',
+    text: 'Asignamos y coordinamos tus domicilios por WhatsApp. Cada domiciliario recibe sus entregas con dirección y horario, y tú sabes en qué va cada pedido sin hacer una sola llamada.',
     example:
-      'Una venta en tu POS → actualiza inventario → genera factura → envía confirmación al cliente. Sin tocar nada.',
-  },
-  {
-    Icon: ClockReportIcon,
-    title: 'Automatización de reportes y datos',
-    text: 'Reportes que se generan solos, datos que se organizan sin que nadie los toque. En el formato que necesites, cuando lo necesites.',
-    example: 'Cada lunes a las 8am → tu reporte de ventas semanal llega a tu correo, listo para revisar.',
+      'Entra un pedido → se asigna al domiciliario disponible → recibe los datos por WhatsApp → el cliente es notificado del envío.',
   },
 ];
 
 export default function Servicios() {
   usePageMeta(
-    'Servicios — Clapi',
-    'Automatización de flujos, bots con IA, integraciones y reportes automáticos, a medida de tu negocio.'
+    'CLAPI — Servicios',
+    'Sistemas de toma de pedidos por WhatsApp para restaurantes y minimarkets, y agendamiento automático de domiciliarios.'
   );
 
   return (
@@ -78,6 +72,23 @@ export default function Servicios() {
                 </SectionReveal>
               );
             })}
+
+            <SectionReveal className="mx-auto flex w-full max-w-3xl flex-col items-center rounded-card border-2 border-dashed border-brand/20 bg-[linear-gradient(160deg,rgba(237,230,255,0.5)_0%,rgba(247,247,247,0.5)_100%)] px-8 py-12 text-center md:py-14">
+              <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-brand-dark shadow-card">
+                <span className="h-1.5 w-1.5 rounded-full bg-accent ring-[3px] ring-accent/35" />
+                En camino
+              </span>
+              <span className="mt-6 flex h-14 w-14 items-center justify-center rounded-full bg-white/80">
+                <RocketIcon className="h-7 w-7 text-brand/60" />
+              </span>
+              <h2 className="mt-5 text-[28px] font-semibold leading-tight text-ink/60">
+                Próximamente más...
+              </h2>
+              <p className="mt-3 max-w-md leading-relaxed text-ink/50">
+                Estamos construyendo nuevas soluciones para más tipos de negocio. Muy pronto
+                las verás aquí.
+              </p>
+            </SectionReveal>
           </div>
         </Container>
       </section>

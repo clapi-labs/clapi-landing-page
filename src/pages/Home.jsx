@@ -27,7 +27,7 @@ import usePageMeta from '../hooks/usePageMeta.js';
  */
 export default function Home() {
   usePageMeta(
-    'Clapi — Automatizamos lo repetitivo para que te enfoques en lo que importa',
+    'CLAPI — Automatizamos lo repetitivo para que te enfoques en lo que importa',
     'Agencia de automatizaciones personalizadas para empresas y profesionales. Soluciones a medida que funcionan desde el día uno.'
   );
 

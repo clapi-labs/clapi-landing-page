@@ -33,7 +33,7 @@ export default function Team() {
               conversación hasta un sistema funcionando.
             </p>
             <p className="mt-6 max-w-[550px] text-lg font-medium leading-relaxed text-brand">
-              Trabajar con Clapi es trabajar directamente con quienes construyen tu solución.
+              Trabajar con CLAPI es trabajar directamente con quienes construyen tu solución.
             </p>
 
             <div className="mt-10">

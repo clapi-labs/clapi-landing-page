@@ -110,6 +110,16 @@ export function BoxIcon(props) {
   );
 }
 
+export function CalendarIcon(props) {
+  return (
+    <svg {...base} {...props}>
+      <rect x="3.5" y="5" width="17" height="15.5" rx="2" />
+      <path d="M3.5 9.5H20.5M8 3V6.5M16 3V6.5" />
+      <path d="M9 14.75L11 16.75L15 12.75" />
+    </svg>
+  );
+}
+
 /* ── Públicos a los que hablamos (bloque "no necesitas ser gran empresa") ── */
 
 export function BuildingIcon(props) {

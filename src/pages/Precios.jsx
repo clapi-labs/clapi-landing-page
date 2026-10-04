@@ -5,7 +5,7 @@ import PageCTA from '../components/PageCTA.jsx';
 import Button from '../components/Button.jsx';
 import Faq from '../components/Faq.jsx';
 import usePageMeta from '../hooks/usePageMeta.js';
-import { useChat } from '../context/ChatContext.jsx';
+import { whatsappLinkProps } from '../config/contact.js';
 
 const PLANS = [
   {
@@ -62,10 +62,9 @@ const FAQ_ITEMS = [
 
 export default function Precios() {
   usePageMeta(
-    'Precios — Clapi',
+    'CLAPI — Precios',
     'Rangos de precio claros para automatizaciones simples, intermedias y a medida. Sin letra pequeña.'
   );
-  const { openChat } = useChat();
 
   return (
     <>
@@ -90,9 +89,7 @@ export default function Precios() {
                 <p className="mt-4 leading-relaxed text-ink/80">{text}</p>
                 <p className="mt-6 text-sm font-medium text-ink/50">Tiempo estimado: {time}</p>
                 <Button
-                  as="button"
-                  type="button"
-                  onClick={openChat}
+                  {...whatsappLinkProps}
                   variant={variant}
                   className="mt-8 justify-center"
                 >

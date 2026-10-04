@@ -6,7 +6,7 @@ import GooeyNav from './GooeyNav.jsx';
 import StaggeredMenu from './StaggeredMenu.jsx';
 import GlassSurface from './GlassSurface.jsx';
 import { SHELL_PADDING } from './Container.jsx';
-import { useChat } from '../context/ChatContext.jsx';
+import { WHATSAPP_URL, whatsappLinkProps } from '../config/contact.js';
 import logoDark from '../assets/logotipo-dark.png';
 
 // Barra fija, sin animación de encogido al hacer scroll: siempre el mismo
@@ -25,18 +25,17 @@ const LINKS = [
 
 // El menú móvil añade el CTA como un ítem más: StaggeredMenu no admite
 // contenido suelto en el panel, y el drawer anterior sí llevaba el botón.
-// `link: '#chat'` es un valor sentinel interceptado por `handleNavClick` para
-// abrir el chat en vez de navegar — StaggeredMenu solo sabe renderizar <a>.
+// El CTA apunta a WhatsApp; `handleNavClick` lo abre en otra pestaña porque
+// StaggeredMenu solo sabe renderizar <a> sin target.
 const MENU_ITEMS = [
   ...LINKS.map((link) => ({ label: link.label, ariaLabel: `Ir a ${link.label}`, link: link.href })),
-  { label: 'Hablemos', ariaLabel: 'Abrir el chat de Clapi', link: '#chat' },
+  { label: 'Hablemos', ariaLabel: 'Escribir a CLAPI por WhatsApp', link: WHATSAPP_URL },
 ];
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { openChat } = useChat();
   // El logo navega a "/" pero no pasa por el onClick de GooeyNav (no es uno
   // de sus <a>), así que la píldora de la última sección visitada se quedaba
   // marcada. `cleared` fuerza a -1 en cuanto la ruta es home.
@@ -45,14 +44,14 @@ export default function Navbar() {
   // Delegación de click a nivel de contenedor: GooeyNav y StaggeredMenu
   // renderizan <a> normales (no se tocan sus internals) — aquí se intercepta
   // el click ANTES de que el navegador siga el href, para convertir rutas
-  // internas en navegación SPA y el sentinel '#chat' en apertura del panel.
+  // internas en navegación SPA y abrir WhatsApp en otra pestaña.
   function handleNavClick(e) {
     const anchor = e.target.closest('a');
     if (!anchor) return;
     const href = anchor.getAttribute('href');
-    if (href === '#chat') {
+    if (href === WHATSAPP_URL) {
       e.preventDefault();
-      openChat();
+      window.open(href, '_blank', 'noreferrer');
     } else if (href && href.startsWith('/')) {
       e.preventDefault();
       navigate(href);
@@ -106,7 +105,7 @@ export default function Navbar() {
               para leerse, y así queda todo el peso de marca y navegación del
               mismo lado. */}
           <div className="flex items-center gap-8 justify-self-start">
-            <a href="/" className="relative z-10 shrink-0" aria-label="Clapi — inicio">
+            <a href="/" className="relative z-10 shrink-0" aria-label="CLAPI — inicio">
               <GlareHover
                 glareColor="#ffffff"
                 glareOpacity={0.6}
@@ -115,7 +114,7 @@ export default function Navbar() {
                 transitionDuration={600}
                 borderRadius="0px"
               >
-                <img src={logoDark} alt="Clapi" className="h-8 w-auto" />
+                <img src={logoDark} alt="CLAPI" className="h-8 w-auto" />
               </GlareHover>
             </a>
 
@@ -156,9 +155,7 @@ export default function Navbar() {
               borderRadius="50px"
             >
               <Button
-                as="button"
-                type="button"
-                onClick={openChat}
+                {...whatsappLinkProps}
                 className="!px-5 !py-2.5 !text-sm hover:!bg-brand hover:!text-white"
               >
                 Hablemos →

@@ -2,11 +2,9 @@ import { Link } from 'react-router-dom';
 import Container from '../components/Container.jsx';
 import SectionReveal from '../components/SectionReveal.jsx';
 import Button from '../components/Button.jsx';
-import { useChat } from '../context/ChatContext.jsx';
+import { PHONE_DISPLAY, PHONE_TEL, whatsappLinkProps } from '../config/contact.js';
 
 export default function FinalCTA() {
-  const { openChat } = useChat();
-
   return (
     <section
       id="contacto"
@@ -18,15 +16,21 @@ export default function FinalCTA() {
             ¿Listo para automatizar lo que te quita tiempo?
           </h2>
           <p className="mx-auto mt-6 max-w-[600px] text-lg leading-relaxed text-white/80">
-            Cuéntanos tu caso en menos de un minuto. Nuestro equipo te contacta en menos de 24
-            horas.
+            Escríbenos por WhatsApp y cuéntanos tu caso. Nuestro equipo te responde en menos de
+            24 horas.
           </p>
           {/* El secundario va debajo del botón (no al lado) para que la
               jerarquía sea evidente: una acción principal, una alternativa. */}
           <div className="mt-10 flex flex-col items-center gap-6">
-            <Button as="button" type="button" onClick={openChat} variant="onDark">
+            <Button {...whatsappLinkProps} variant="onDark">
               Quiero automatizar →
             </Button>
+            <p className="text-sm text-white/70">
+              o llámanos al{' '}
+              <a href={PHONE_TEL} className="font-semibold text-white hover:text-accent">
+                {PHONE_DISPLAY}
+              </a>
+            </p>
             <Link
               to="/precios"
               className="text-base font-medium text-white underline decoration-white/40 underline-offset-4 transition-colors hover:decoration-white"

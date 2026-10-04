@@ -1,7 +1,7 @@
 import './ToolsCarousel.css';
 
 /*
- * Herramientas e IAs que Clapi integra. Son wordmarks tipográficos, no los
+ * Herramientas e IAs que CLAPI integra. Son wordmarks tipográficos, no los
  * logos oficiales: usar las marcas reales exige sus archivos y respetar las
  * guías de cada una, así que hasta tener esos assets se muestran como texto
  * monocromo — que además es justo lo que pide el diseño (nada compitiendo

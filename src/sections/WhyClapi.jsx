@@ -26,7 +26,7 @@ export default function WhyClapi() {
       <Container>
         <SectionReveal className="text-center">
           <h2 className="text-4xl font-semibold leading-tight text-ink sm:text-[44px]">
-            ¿Por qué Clapi?
+            ¿Por qué CLAPI?
           </h2>
         </SectionReveal>
 
